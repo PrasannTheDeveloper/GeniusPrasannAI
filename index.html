@@ -306,7 +306,7 @@
         
         .chat-input {
             flex: 1;
-            padding: 12px 48px 12px 16px;
+            padding: 12px 16px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             background-color: var(--bg-tertiary);
@@ -319,11 +319,16 @@
             line-height: 1.5;
             -webkit-appearance: none;
             outline: none;
+            text-align: center;
         }
         
         .chat-input:focus {
             outline: none;
             border-color: var(--accent-color);
+        }
+        
+        .chat-input::placeholder {
+            text-align: center;
         }
         
         .send-button {
@@ -527,25 +532,8 @@
             <!-- Welcome Screen (will be hidden after first message) -->
             <div class="welcome-screen" id="welcome-screen">
                 <h1 class="welcome-title"> Genius Prasann AI</h1>
-                <p class="welcome-subtitle">Genius Prasann Ai is ready to help with your tech questions</p>
-                <div class="examples-container">
-                    <div class="example-card">
-                        <p class="example-title">Explain html and css</p>
-                        <p class="example-text">In simple terms for a beginner</p>
-                    </div>
-                    <div class="example-card">
-                        <p class="example-title">Explain python Programming .</p>
-                        <p class="example-text">Find errors in my function</p>
-                    </div>
-                    <div class="example-card">
-                        <p class="example-title">Create an MySQL query</p>
-                        <p class="example-text">To find top customers by purchase</p>
-                    </div>
-                    <div class="example-card">
-                        <p class="example-title">Explain Operating System</p>
-                        <p class="example-text">How it works in simple terms</p>
-                    </div>
-                </div>
+                <p class="welcome-subtitle">Genius Prasann Ai is ready to help with your tech questions. Ask me anything !</p>
+               
             </div>
             
             <!-- Messages Area -->
@@ -575,6 +563,22 @@
         const API_KEY = "AIzaSyDOwPfDF8HdlGZEmfmwXiKRrHRzFYnFba8";
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
         
+        // Focus input on load and try to open keyboard
+        function focusInput() {
+            const userInput = document.getElementById('user-input');
+            userInput.focus();
+            
+            // For Android devices, we need to use a small timeout and focus again
+            if (/Android/i.test(navigator.userAgent)) {
+                setTimeout(() => {
+                    userInput.blur();
+                    setTimeout(() => {
+                        userInput.focus();
+                    }, 100);
+                }, 300);
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             const chatMessages = document.getElementById('chat-messages');
             const userInput = document.getElementById('user-input');
@@ -587,6 +591,9 @@
             const newChatButton = document.getElementById('new-chat-button');
             const newChatMobile = document.getElementById('new-chat-mobile');
             let conversationStarted = false;
+            
+            // Focus input when page loads
+            focusInput();
             
             // Handle sidebar toggle on mobile
             function toggleSidebar() {
@@ -606,16 +613,25 @@
                 chatMessages.innerHTML = '';
                 welcomeScreen.style.display = 'flex';
                 conversationStarted = false;
-                userInput.focus();
                 
                 // Close sidebar if open on mobile
                 if (window.innerWidth <= 768) {
                     appContainer.classList.remove('sidebar-visible');
                 }
+                
+                // Focus input after a small delay
+                setTimeout(focusInput, 100);
             }
             
-            newChatButton.addEventListener('click', startNewChat);
-            newChatMobile.addEventListener('click', startNewChat);
+            newChatButton.addEventListener('click', function() {
+                startNewChat();
+                setTimeout(focusInput, 100);
+            });
+            
+            newChatMobile.addEventListener('click', function() {
+                startNewChat();
+                setTimeout(focusInput, 100);
+            });
             
             // Auto-resize textarea
             userInput.addEventListener('input', function() {
@@ -632,7 +648,7 @@
                     const title = this.querySelector('.example-title').textContent;
                     userInput.value = title;
                     userInput.dispatchEvent(new Event('input'));
-                    userInput.focus();
+                    focusInput();
                     
                     // Small delay to allow keyboard to appear
                     setTimeout(() => {
@@ -800,11 +816,6 @@
                     viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no';
                 }
             }
-            
-            // Focus input on load
-            setTimeout(() => {
-                userInput.focus();
-            }, 300);
             
             // Handle back button on Android to close sidebar
             window.addEventListener('popstate', function() {
