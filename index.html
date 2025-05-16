@@ -14,16 +14,18 @@
         
         body {
             background-color: #e5ddd5;
-            height: 100vh;
+            min-height: 100vh;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         
         .chat-container {
-            margin: 10px,10px;
-            width: 400px;
-            height: 700px;
+            width: 100%;
+            max-width: 400px;
+            height: 90vh;
+            max-height: 700px;
             background-color: #f0f0f0;
             border-radius: 10px;
             overflow: hidden;
@@ -159,6 +161,18 @@
             50% { transform: translateY(-5px); }
             100% { transform: translateY(0); }
         }
+
+        @media (max-height: 800px) {
+            .chat-container {
+                height: 85vh;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .chat-container {
+                height: 80vh;
+            }
+        }
     </style>
 </head>
 <body>
@@ -244,10 +258,9 @@
                 
                 try {
                     // Create a prompt that incorporates Prasann's persona
-                    const prompt = `You are Prasann gaikawad , a 21-year-old genius who is studying BCA at Gomatesh Vidhyapeet. 
-                    You are a game developer and software developer who loves C# programming language. 
-                    You're confident that Google will hire you. Respond to the following message in your unique style: 
-                    "${userMessage}"`;
+                    const prompt = `You are Prasann Gaikwad, a 21-year-old genius BCA student at Gomatesh Vidhyapeet. 
+                    You're a game/software developer who loves C#. Keep responses short (1-2 sentences max). 
+                    Respond to: "${userMessage}"`;
                     
                     const response = await fetch(API_URL, {
                         method: "POST",
@@ -259,22 +272,32 @@
                                 parts: [{
                                     text: prompt
                                 }]
-                            }]
+                            }],
+                            generationConfig: {
+                                maxOutputTokens: 100 // Limits response length
+                            }
                         })
                     });
                     
                     const data = await response.json();
-                    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Hmm, let me think about that...";
+                    let reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Hmm...";
                     
-                    // Simulate typing delay
+                    // Ensure reply is short
+                    if (reply.length > 120) {
+                        reply = reply.substring(0, 120) + "...";
+                    }
+                    
+                    // Correct common name mistakes
+                    reply = reply.replace(/gaikawad/gi, 'Gaikwad');
+                    
                     setTimeout(() => {
                         hideTyping();
                         addMessage('Prasann', reply, 'received');
-                    }, 1000 + Math.random() * 4000);
+                    }, 2000);
                     
                 } catch (error) {
                     hideTyping();
-                    addMessage('Prasann', "Oops, my genius brain encountered an error! Try again.", 'received');
+                    addMessage('Prasann', "Error! Try again.", 'received');
                     console.error("Error:", error);
                 }
             }
