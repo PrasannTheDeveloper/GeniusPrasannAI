@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Prasann the Genius</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #e5ddd5;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .chat-container {
+            margin: 10px,10px;
+            width: 400px;
+            height: 700px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            background-color: #075e54;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chat-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #fff;
+        }
+        
+        .chat-header-info h2 {
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+        
+        .chat-header-info p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-image: url('https://web.whatsapp.com/img/bg-chat-tile-light_a4be512e7195b6b733d9110b408f075d.png');
+            background-repeat: repeat;
+        }
+        
+        .message {
+            max-width: 70%;
+            margin-bottom: 15px;
+            padding: 8px 12px;
+            border-radius: 7.5px;
+            position: relative;
+            word-wrap: break-word;
+        }
+        
+        .received {
+            background-color: white;
+            align-self: flex-start;
+            margin-right: auto;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sent {
+            background-color: #dcf8c6;
+            align-self: flex-end;
+            margin-left: auto;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: #666;
+            text-align: right;
+            margin-top: 3px;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-top: 1px solid #ddd;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        .chat-input button {
+            background-color: #075e54;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            padding: 8px 12px;
+            background-color: white;
+            border-radius: 7.5px;
+            width: fit-content;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: #666;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="https://via.placeholder.com/40/075e54/ffffff?text=P" alt="Prasann">
+            <div class="chat-header-info">
+                <h2>Prasann the Genius</h2>
+                <p>Online</p>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <!-- Messages will appear here -->
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type a message..." autocomplete="off">
+            <button id="send-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "AIzaSyDOwPfDF8HdlGZEmfmwXiKRrHRzFYnFba8";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            
+            // Initial greeting from Prasann
+            setTimeout(() => {
+                addMessage('Prasann', 'Hi. I am Prasann the genius..😅.', 'received');
+            }, 500);
+            
+            // Function to add a message to the chat
+            function addMessage(sender, text, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', type);
+                
+                const messageText = document.createElement('div');
+                messageText.textContent = text;
+                
+                const messageTime = document.createElement('div');
+                messageTime.classList.add('message-time');
+                const now = new Date();
+                messageTime.textContent = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+                
+                messageDiv.appendChild(messageText);
+                messageDiv.appendChild(messageTime);
+                chatMessages.appendChild(messageDiv);
+                
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Function to show typing indicator
+            function showTyping() {
+                const typingDiv = document.createElement('div');
+                typingDiv.classList.add('typing-indicator');
+                typingDiv.innerHTML = '<span></span><span></span><span></span>';
+                typingDiv.id = 'typing-indicator';
+                chatMessages.appendChild(typingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Function to hide typing indicator
+            function hideTyping() {
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+            
+            // Function to generate Prasann's response
+            async function generateResponse(userMessage) {
+                showTyping();
+                
+                try {
+                    // Create a prompt that incorporates Prasann's persona
+                    const prompt = `You are Prasann, a 21-year-old genius who is studying BCA at Gomatesh Vidhyapeet. 
+                    You are a game developer and software developer who loves C# programming language. 
+                    You're confident that Google will hire you. Respond to the following message in your unique style: 
+                    "${userMessage}"`;
+                    
+                    const response = await fetch(API_URL, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: prompt
+                                }]
+                            }]
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Hmm, let me think about that...";
+                    
+                    // Simulate typing delay
+                    setTimeout(() => {
+                        hideTyping();
+                        addMessage('Prasann', reply, 'received');
+                    }, 1000 + Math.random() * 2000);
+                    
+                } catch (error) {
+                    hideTyping();
+                    addMessage('Prasann', "Oops, my genius brain encountered an error! Try again.", 'received');
+                    console.error("Error:", error);
+                }
+            }
+            
+            // Handle send button click
+            sendButton.addEventListener('click', function() {
+                const message = userInput.value.trim();
+                if (message) {
+                    addMessage('You', message, 'sent');
+                    userInput.value = '';
+                    generateResponse(message);
+                }
+            });
+            
+            // Handle Enter key press
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
