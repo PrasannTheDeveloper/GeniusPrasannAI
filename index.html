@@ -3,272 +3,378 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chat with Prasann AI - Modern ChatGPT Clone</title>
+    <meta name="theme-color" content="#0f0f0f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Chat with Prasann AI - ChatGPT Clone</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1e1e1e;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #ebebeb;
+            --text-tertiary: #a0a0a0;
+            --accent-color: #11a37f;
+            --border-color: #444444;
+            --user-message-bg: #343541;
+            --ai-message-bg: #222222;
+            --sidebar-width: 260px;
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
         body {
-            background-color: #075E54;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            padding: 0;
+            overflow: hidden;
+            touch-action: manipulation;
         }
         
         .app-container {
             width: 100%;
-            max-width: 480px;
             height: 100vh;
             display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             position: relative;
         }
         
-        .welcome-banner {
-            background-color: white;
-            padding: 15px;
-            border-radius: 10px 10px 0 0;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            text-align: center;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 100;
-            transform: translateY(-100%);
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-secondary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
             transition: transform 0.3s ease;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
-        .welcome-banner.show {
-            transform: translateY(0);
+        .sidebar-hidden {
+            transform: translateX(-100%);
         }
         
-        .welcome-banner h1 {
-            color: #128C7E;
-            margin-bottom: 8px;
-            font-size: 20px;
-        }
-        
-        .welcome-banner p {
-            color: #555;
-            margin-bottom: 6px;
+        .new-chat-button {
+            margin: 12px;
+            padding: 12px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             font-size: 14px;
-            line-height: 1.4;
+            font-weight: 500;
+            transition: transform 0.1s;
         }
         
-        .welcome-banner .disclaimer {
-            font-size: 12px;
-            color: #999;
-            font-style: italic;
-            margin-top: 8px;
+        .new-chat-button:active {
+            transform: scale(0.98);
         }
         
-        .welcome-banner .close-banner {
-            position: absolute;
-            top: 10px;
-            right: 10px;
+        .sidebar-content {
+            flex: 1;
+            padding: 8px;
+            overflow-y: auto;
+        }
+        
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--border-color);
+            padding-bottom: calc(12px + var(--safe-area-inset-bottom));
+        }
+        
+        .sidebar-footer button {
             background: none;
             border: none;
-            color: #075E54;
-            font-size: 18px;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
+            padding: 8px;
+            width: 100%;
+            text-align: left;
+            border-radius: 5px;
+            font-size: 14px;
         }
         
+        .sidebar-footer button:active {
+            background-color: var(--bg-tertiary);
+        }
+
+        /* Main Chat Area */
         .chat-container {
             width: 100%;
             height: 100%;
-            background-color: #ECE5DD;
+            margin-left: 0;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            transition: margin-left 0.3s ease;
+            position: relative;
         }
         
-        .chat-header {
-            background-color: #075E54;
-            color: white;
-            padding: 10px 15px;
-            display: flex;
+        .sidebar-visible .chat-container {
+            margin-left: var(--sidebar-width);
+        }
+        
+        .mobile-header {
+            display: none;
+            padding: 12px;
+            background-color: var(--bg-secondary);
             align-items: center;
-            height: 60px;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            height: 56px;
+            box-sizing: border-box;
         }
         
-        .chat-header .back-button {
+        .menu-button {
             background: none;
             border: none;
-            color: white;
-            margin-right: 10px;
+            color: var(--text-primary);
             cursor: pointer;
-            font-size: 20px;
-        }
-        
-        .chat-header img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-            object-fit: cover;
-            background-color: #128C7E;
             display: flex;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 18px;
+            padding: 8px;
+            border-radius: 50%;
         }
         
-        .chat-header-info {
-            flex: 1;
-        }
-        
-        .chat-header-info h2 {
-            font-size: 16px;
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
-        
-        .chat-header-info p {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-        
-        .chat-header-actions {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .header-icon {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
+        .menu-button:active {
+            background-color: rgba(255, 255, 255, 0.1);
         }
         
         .chat-messages {
             flex: 1;
-            padding: 12px;
             overflow-y: auto;
-            background-image: url('https://i.pinimg.com/originals/ab/ab/60/abab60f06ab52fa7846593e6ae0c9a0b.png');
-            background-repeat: repeat;
-            background-size: 200px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: var(--safe-area-inset-bottom);
         }
         
-        .message {
-            max-width: 75%;
-            margin-bottom: 12px;
-            padding: 8px 12px;
-            border-radius: 7.5px;
-            position: relative;
-            word-wrap: break-word;
-            font-size: 14px;
-            line-height: 1.4;
-            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+        .message-row {
+            padding: 16px 5%;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
         }
         
-        .received {
-            background-color: white;
-            align-self: flex-start;
-            margin-right: auto;
-            border-top-left-radius: 0;
+        .user-row {
+            background-color: var(--user-message-bg);
         }
         
-        .sent {
-            background-color: #DCF8C6;
-            align-self: flex-end;
-            margin-left: auto;
-            border-top-right-radius: 0;
-        }
-        
-        .message-time {
-            font-size: 10px;
-            color: #777;
-            text-align: right;
-            margin-top: 3px;
+        .ai-row {
+            background-color: var(--ai-message-bg);
         }
         
         .message-container {
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            gap: 16px;
+        }
+        
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .user-avatar {
+            background-color: #888888;
+        }
+        
+        .message-content {
+            flex: 1;
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            padding-top: 4px;
+        }
+        
+        .welcome-screen {
             display: flex;
             flex-direction: column;
-        }
-        
-        .chat-input {
-            display: flex;
-            padding: 8px 10px;
-            background-color: #F0F0F0;
             align-items: center;
-            gap: 8px;
-            height: 60px;
+            justify-content: center;
+            height: 100%;
+            padding: 0 20px;
+            text-align: center;
         }
         
-        .input-container {
-            flex: 1;
-            background-color: white;
-            border-radius: 20px;
-            padding: 0 5px 0 15px;
-            display: flex;
-            align-items: center;
+        .welcome-title {
+            font-size: 28px;
+            margin-bottom: 16px;
+            font-weight: 600;
         }
         
-        .input-container input {
-            flex: 1;
-            padding: 10px 0;
-            border: none;
-            outline: none;
+        .welcome-subtitle {
+            color: var(--text-tertiary);
+            margin-bottom: 32px;
+            max-width: 500px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .examples-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 700px;
+        }
+        
+        .example-card {
+            background-color: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            border: 1px solid var(--border-color);
+            transition: transform 0.1s;
+        }
+        
+        .example-card:active {
+            transform: scale(0.98);
+            background-color: var(--bg-tertiary);
+        }
+        
+        .example-title {
+            font-weight: 600;
+            margin-bottom: 6px;
             font-size: 15px;
         }
         
-        .emoji-button, .attach-button {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #888;
-            cursor: pointer;
-            width: 40px;
+        .example-text {
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+
+        /* Input Area */
+        .chat-input-container {
+            padding: 12px 5%;
             display: flex;
             justify-content: center;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-primary);
+            position: relative;
+            padding-bottom: calc(12px + var(--safe-area-inset-bottom));
+        }
+        
+        .chat-input-wrapper {
+            display: flex;
             align-items: center;
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px 48px 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 16px;
+            resize: none;
+            min-height: 56px;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.5;
+            -webkit-appearance: none;
+            outline: none;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
         }
         
         .send-button {
-            background-color: #00A884;
-            color: white;
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            background-color: transparent;
             border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            color: var(--text-primary);
             cursor: pointer;
             display: flex;
-            justify-content: center;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            justify-content: center;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            padding: 8px;
+            border-radius: 50%;
         }
         
+        .send-button:active {
+            opacity: 1;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .send-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .input-info {
+            position: absolute;
+            bottom: 4px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            width: 100%;
+            text-align: center;
+            padding-bottom: var(--safe-area-inset-bottom);
+        }
+        
+        /* Typing Indicator */
         .typing-indicator {
             display: flex;
-            padding: 8px 16px;
-            background-color: white;
-            border-radius: 7.5px;
-            width: fit-content;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
-            border-top-left-radius: 0;
             align-items: center;
+            gap: 4px;
+            padding-left: 4px;
         }
         
         .typing-indicator span {
             height: 8px;
             width: 8px;
-            background-color: #25D366;
+            background-color: var(--accent-color);
             border-radius: 50%;
             display: inline-block;
-            margin: 0 2px;
             animation: typing 1.2s infinite;
         }
         
@@ -286,116 +392,179 @@
             100% { transform: translateY(0); }
         }
         
-        /* New: Android-friendly media queries */
-        @media screen and (max-width: 480px) {
-            .app-container {
-                max-width: 100%;
-                height: 100%;
+        /* Overlay for sidebar on mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .sidebar-visible .sidebar-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* Media Queries */
+        @media screen and (max-width: 768px) {
+            .sidebar {
+                width: 85%;
+                max-width: 300px;
+                transform: translateX(-100%);
             }
             
-            .message {
-                max-width: 85%;
+            .sidebar-visible .sidebar {
+                transform: translateX(0);
+            }
+            
+            .mobile-header {
+                display: flex;
+            }
+            
+            .message-row {
+                padding: 16px 5%;
+            }
+            
+            .message-content {
                 font-size: 15px;
             }
             
-            .chat-header {
-                padding: 10px;
+            .chat-input-container {
+                padding: 12px 5%;
+                padding-bottom: calc(12px + var(--safe-area-inset-bottom));
             }
             
-            .chat-messages {
-                padding: 10px;
+            .welcome-title {
+                font-size: 24px;
             }
             
-            .chat-input {
-                padding: 6px 8px;
+            .welcome-subtitle {
+                font-size: 14px;
+                margin-bottom: 24px;
             }
             
-            body {
-                padding: 0;
+            .example-card {
+                padding: 14px;
             }
         }
         
-        /* For very small screens */
-        @media screen and (max-width: 350px) {
-            .message {
-                max-width: 90%;
-                font-size: 14px;
+        @media screen and (min-width: 769px) {
+            .sidebar {
+                position: relative;
+                transform: none !important;
             }
             
-            .chat-header img {
-                width: 35px;
-                height: 35px;
+            .sidebar-overlay {
+                display: none;
             }
-            
-            .chat-header-info h2 {
-                font-size: 15px;
+        }
+        
+        /* Prevent zooming on input focus */
+        @media screen and (max-width: 768px) {
+            input, textarea {
+                font-size: 16px !important;
             }
         }
     </style>
 </head>
 <body>
-    <div class="welcome-banner" id="welcome-banner">
-        <button class="close-banner" id="close-banner">×</button>
-        <h1>Welcome to Prasann AI</h1>
-        <p>AI chatbot developed by Prasann Gaikwad, BCA student at Gomatesh Vidhyapeet</p>
-        <p class="disclaimer">Your chats are completely private and not stored anywhere.</p>
-    </div>
-    
-    <div class="app-container">
+    <div class="app-container" id="app-container">
+        <!-- Sidebar Overlay (mobile only) -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+        
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <button class="new-chat-button" id="new-chat-button">
+                <span>New chat</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <div class="sidebar-content" id="sidebar-content">
+                <!-- Chat history would go here -->
+            </div>
+            <div class="sidebar-footer">
+                <button id="profile-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    <span>Prasann AI Profile</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Chat Area -->
         <div class="chat-container">
-            <div class="chat-header">
-                <button class="back-button">
+            <!-- Mobile Header -->
+            <div class="mobile-header">
+                <button class="menu-button" id="menu-button">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 18l-6-6 6-6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
                 </button>
-                <img src="https://via.placeholder.com/40/128C7E/ffffff?text=P" alt="Prasann AI">
-                <div class="chat-header-info">
-                    <h2>Prasann AI</h2>
-                    <p>Online • Tech Wizard</p>
-                </div>
-                <div class="chat-header-actions">
-                    <button class="header-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M23 7l-7 5 7 5V7z"/>
-                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                        </svg>
-                    </button>
-                    <button class="header-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="1"/>
-                            <circle cx="19" cy="12" r="1"/>
-                            <circle cx="5" cy="12" r="1"/>
-                        </svg>
-                    </button>
+                <span> Genius Prasann [AI]</span>
+                <button class="new-chat-mobile" id="new-chat-mobile">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Welcome Screen (will be hidden after first message) -->
+            <div class="welcome-screen" id="welcome-screen">
+                <h1 class="welcome-title"> Genius Prasann AI</h1>
+                <p class="welcome-subtitle">Genius Prasann Ai is ready to help with your tech questions</p>
+                <div class="examples-container">
+                    <div class="example-card">
+                        <p class="example-title">Explain html and css</p>
+                        <p class="example-text">In simple terms for a beginner</p>
+                    </div>
+                    <div class="example-card">
+                        <p class="example-title">Explain python Programming .</p>
+                        <p class="example-text">Find errors in my function</p>
+                    </div>
+                    <div class="example-card">
+                        <p class="example-title">Create an MySQL query</p>
+                        <p class="example-text">To find top customers by purchase</p>
+                    </div>
+                    <div class="example-card">
+                        <p class="example-title">Explain Operating System</p>
+                        <p class="example-text">How it works in simple terms</p>
+                    </div>
                 </div>
             </div>
             
-            <div class="chat-messages" id="chat-messages"></div>
+            <!-- Messages Area -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- Messages will be added here dynamically -->
+            </div>
             
-            <div class="chat-input">
-                <button class="emoji-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                        <line x1="9" y1="9" x2="9.01" y2="9"/>
-                        <line x1="15" y1="9" x2="15.01" y2="9"/>
-                    </svg>
-                </button>
-                <div class="input-container">
-                    <input type="text" id="user-input" placeholder="Message" autocomplete="off">
-                    <button class="attach-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            <!-- Input Area -->
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <textarea class="chat-input" id="user-input" placeholder="Message Prasann AI..." rows="1"></textarea>
+                    <button id="send-button" class="send-button" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                         </svg>
                     </button>
                 </div>
-                <button id="send-button" class="send-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
+                <div class="input-info">
+                    Prasann AI can make mistakes. Verify important information.
+                </div>
             </div>
         </div>
     </div>
@@ -408,66 +577,140 @@
             const chatMessages = document.getElementById('chat-messages');
             const userInput = document.getElementById('user-input');
             const sendButton = document.getElementById('send-button');
-            const welcomeBanner = document.getElementById('welcome-banner');
-            const closeBanner = document.getElementById('close-banner');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const menuButton = document.getElementById('menu-button');
+            const sidebar = document.getElementById('sidebar');
+            const appContainer = document.getElementById('app-container');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            const newChatButton = document.getElementById('new-chat-button');
+            const newChatMobile = document.getElementById('new-chat-mobile');
+            let conversationStarted = false;
             
-            // Show welcome banner after a short delay
-            setTimeout(() => {
-                welcomeBanner.classList.add('show');
+            // Handle sidebar toggle on mobile
+            function toggleSidebar() {
+                appContainer.classList.toggle('sidebar-visible');
                 
-                // Auto-hide banner after 5 seconds
-                setTimeout(() => {
-                    welcomeBanner.classList.remove('show');
-                }, 5000);
-            }, 1000);
+                // Close keyboard when sidebar opens
+                if (appContainer.classList.contains('sidebar-visible')) {
+                    userInput.blur();
+                }
+            }
             
-            // Close banner when clicked
-            closeBanner.addEventListener('click', function() {
-                welcomeBanner.classList.remove('show');
+            menuButton.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+            
+            // New chat buttons
+            function startNewChat() {
+                chatMessages.innerHTML = '';
+                welcomeScreen.style.display = 'flex';
+                conversationStarted = false;
+                userInput.focus();
+                
+                // Close sidebar if open on mobile
+                if (window.innerWidth <= 768) {
+                    appContainer.classList.remove('sidebar-visible');
+                }
+            }
+            
+            newChatButton.addEventListener('click', startNewChat);
+            newChatMobile.addEventListener('click', startNewChat);
+            
+            // Auto-resize textarea
+            userInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+                
+                // Enable/disable send button based on input
+                sendButton.disabled = this.value.trim() === '';
             });
             
-            setTimeout(() => {
-                addMessage('Prasann AI', 'Hey there! Genius Prasann AI at your service. What can I help you code today? 💻', 'received');
-            }, 800);
+            // Handle example card clicks
+            document.querySelectorAll('.example-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const title = this.querySelector('.example-title').textContent;
+                    userInput.value = title;
+                    userInput.dispatchEvent(new Event('input'));
+                    userInput.focus();
+                    
+                    // Small delay to allow keyboard to appear
+                    setTimeout(() => {
+                        sendButton.click();
+                    }, 300);
+                });
+            });
             
-            function addMessage(sender, text, type) {
-                const messageContainer = document.createElement('div');
-                messageContainer.classList.add('message-container');
+            function addMessage(sender, text, isAi) {
+                // Hide welcome screen if this is the first message
+                if (!conversationStarted) {
+                    welcomeScreen.style.display = 'none';
+                    conversationStarted = true;
+                }
                 
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', type);
+                const messageRowDiv = document.createElement('div');
+                messageRowDiv.classList.add('message-row');
+                messageRowDiv.classList.add(isAi ? 'ai-row' : 'user-row');
                 
-                const messageText = document.createElement('div');
-                messageText.textContent = text;
+                const messageContainerDiv = document.createElement('div');
+                messageContainerDiv.classList.add('message-container');
                 
-                const messageTime = document.createElement('div');
-                messageTime.classList.add('message-time');
-                const now = new Date();
-                const hours = now.getHours();
-                const minutes = now.getMinutes();
-                messageTime.textContent = (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+                const avatarDiv = document.createElement('div');
+                avatarDiv.classList.add('avatar');
+                if (isAi) {
+                    avatarDiv.textContent = 'P';
+                } else {
+                    avatarDiv.classList.add('user-avatar');
+                    avatarDiv.textContent = 'U';
+                }
                 
-                messageDiv.appendChild(messageText);
-                messageDiv.appendChild(messageTime);
-                messageContainer.appendChild(messageDiv);
-                chatMessages.appendChild(messageContainer);
+                const messageContentDiv = document.createElement('div');
+                messageContentDiv.classList.add('message-content');
+                messageContentDiv.textContent = text;
                 
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                messageContainerDiv.appendChild(avatarDiv);
+                messageContainerDiv.appendChild(messageContentDiv);
+                messageRowDiv.appendChild(messageContainerDiv);
+                chatMessages.appendChild(messageRowDiv);
+                
+                // Scroll to bottom with smooth behavior
+                setTimeout(() => {
+                    chatMessages.scrollTo({
+                        top: chatMessages.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }, 50);
             }
             
             function showTyping() {
+                const messageRowDiv = document.createElement('div');
+                messageRowDiv.classList.add('message-row', 'ai-row');
+                messageRowDiv.id = 'typing-row';
+                
+                const messageContainerDiv = document.createElement('div');
+                messageContainerDiv.classList.add('message-container');
+                
+                const avatarDiv = document.createElement('div');
+                avatarDiv.classList.add('avatar');
+                avatarDiv.textContent = 'P';
+                
                 const typingDiv = document.createElement('div');
                 typingDiv.classList.add('typing-indicator');
                 typingDiv.innerHTML = '<span></span><span></span><span></span>';
-                typingDiv.id = 'typing-indicator';
-                chatMessages.appendChild(typingDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                messageContainerDiv.appendChild(avatarDiv);
+                messageContainerDiv.appendChild(typingDiv);
+                messageRowDiv.appendChild(messageContainerDiv);
+                chatMessages.appendChild(messageRowDiv);
+                
+                chatMessages.scrollTo({
+                    top: chatMessages.scrollHeight,
+                    behavior: 'smooth'
+                });
             }
             
             function hideTyping() {
-                const typingIndicator = document.getElementById('typing-indicator');
-                if (typingIndicator) {
-                    typingIndicator.remove();
+                const typingRow = document.getElementById('typing-row');
+                if (typingRow) {
+                    typingRow.remove();
                 }
             }
             
@@ -476,7 +719,7 @@
                 
                 try {
                     const prompt = `You are Prasann AI, created by Prasann Gaikwad, a coding genius and BCA student. 
-                    Keep your response VERY SHORT (1 sentence), witty and tech-related.
+                    Keep your response concise and tech-focused.
                     User message: "${userMessage}"`;
                     
                     const response = await fetch(API_URL, {
@@ -491,52 +734,88 @@
                                 }]
                             }],
                             generationConfig: {
-                                maxOutputTokens: 50,
+                                maxOutputTokens: 500,
                                 temperature: 0.7
                             }
                         })
                     });
                     
                     const data = await response.json();
-                    let reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Code compilation error! Try again! 💻";
-                    
-                    // Ensure replies are short
-                    if (reply.length > 100) {
-                        reply = reply.substring(0, 97) + "...";
-                    }
+                    let reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that. Can you try again?";
                     
                     // Add emoji if none present
-                    if (!reply.includes('😄') && !reply.includes('💻') && !reply.includes('👨‍💻') && 
-                        !reply.includes('🚀') && !reply.includes('⚡')) {
-                        const emojis = ['💻', '👨‍💻', '🚀', '⚡', '😎'];
+                    const hasEmoji = /[\p{Emoji}]/u.test(reply);
+                    if (!hasEmoji) {
+                        const emojis = ['💻', '👨‍💻', '🚀', '⚡', '😎', '🔧', '🧠', '👾'];
                         const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                        if (!reply.endsWith('.') && !reply.endsWith('!') && !reply.endsWith('?')) {
+                            reply += '.';
+                        }
                         reply += ' ' + randomEmoji;
                     }
                     
                     setTimeout(() => {
                         hideTyping();
-                        addMessage('Prasann AI', reply, 'received');
-                    }, Math.random() * 800 + 500);
+                        addMessage('Prasann AI', reply, true);
+                    }, Math.random() * 1000 + 500);
                     
                 } catch (error) {
                     console.error(error);
                     hideTyping();
-                    addMessage('Prasann AI', "Error in my code! Let me debug that for you! 🔧", 'received');
+                    addMessage('Prasann AI', "Sorry, I encountered an error processing your request. Let me debug that! 🔧", true);
                 }
             }
             
             sendButton.addEventListener('click', function() {
                 const message = userInput.value.trim();
                 if (message) {
-                    addMessage('You', message, 'sent');
+                    addMessage('You', message, false);
                     userInput.value = '';
+                    userInput.style.height = 'auto';
+                    sendButton.disabled = true;
                     generateResponse(message);
+                    
+                    // Close keyboard after sending on mobile
+                    if (window.innerWidth <= 768) {
+                        userInput.blur();
+                    }
                 }
             });
             
-            userInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendButton.click();
+            userInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!sendButton.disabled) {
+                        sendButton.click();
+                    }
+                }
+            });
+            
+            // Prevent keyboard from pushing content up on Android
+            if (/Android/.test(navigator.userAgent)) {
+                const viewport = document.querySelector('meta[name="viewport"]');
+                if (viewport) {
+                    viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no';
+                }
+            }
+            
+            // Focus input on load
+            setTimeout(() => {
+                userInput.focus();
+            }, 300);
+            
+            // Handle back button on Android to close sidebar
+            window.addEventListener('popstate', function() {
+                if (appContainer.classList.contains('sidebar-visible')) {
+                    appContainer.classList.remove('sidebar-visible');
+                    history.pushState(null, null, window.location.pathname);
+                }
+            });
+            
+            // Push state when opening sidebar
+            menuButton.addEventListener('click', function() {
+                if (!appContainer.classList.contains('sidebar-visible')) {
+                    history.pushState(null, null, window.location.pathname + '#sidebar');
                 }
             });
         });
